@@ -13,11 +13,11 @@ from . import agents
 
 
 gym.register(
-    id="Template-Rm-Rl-v0",
+    id="Template-Rm-Flat-v0",
     entry_point="isaaclab.envs:ManagerBasedRLEnv",
     disable_env_checker=True,
     kwargs={
-        "env_cfg_entry_point": f"{__name__}.rm_rl_env_cfg:RmRlEnvCfg",
+        "env_cfg_entry_point": f"{__name__}.flat_env_cfg:FlatEnvCfg",
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerCfg",
     },
 )

@@ -75,5 +75,8 @@
     },
     // Python extra paths
     // Note: this is filled up when vscode is set up for the first time
-    "python.analysis.extraPaths": []
+        "python.analysis.extraPaths": [
+        "../IsaacLab/source/isaaclab/isaaclab"
+    ],
+    "python.analysis.autoSearchPaths": true
 }
