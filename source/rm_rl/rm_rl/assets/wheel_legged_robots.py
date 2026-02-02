@@ -24,7 +24,7 @@ Infantry_25_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         pos=(0.0, 0.0, 0.23),
         joint_pos={
-            "hip.*": 1.41686,
+            "hip.*": 1.5,
             "knee.*": 0.73339,
             "wheel.*": 0.0,
         },
@@ -36,7 +36,7 @@ Infantry_25_CFG = ArticulationCfg(
             joint_names_expr=["hip.*", "knee.*"],
             effort_limit=80,
             velocity_limit=20,
-            stiffness=80.0,
+            stiffness=40.0,
             damping=2.0,
             friction=0.0,
             armature=0.0,
@@ -47,8 +47,8 @@ Infantry_25_CFG = ArticulationCfg(
             joint_names_expr=["wheel.*"],
             effort_limit=5,
             velocity_limit=60,
-            stiffness=0.0,
-            damping=0.6,
+            stiffness=40.0,
+            damping=0.5,
             friction=0.0,
             armature=0.000243216,
             min_delay=0,

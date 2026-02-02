@@ -3,52 +3,79 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+"""Common functions that can be used to define rewards for the learning environment.
+
+The functions can be passed to the :class:`isaaclab.managers.RewardTermCfg` object to
+specify the reward function and its parameters.
+"""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
 import torch
 
-from isaaclab.assets import Articulation
+from isaaclab.envs import mdp
 from isaaclab.managers import SceneEntityCfg
-import isaaclab.utils.math as math_utils
+from isaaclab.sensors import ContactSensor
+from isaaclab.utils.math import quat_apply_inverse, yaw_quat
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
 
 
-# def joint_pos_target_l2(env: ManagerBasedRLEnv, target: float, asset_cfg: SceneEntityCfg) -> torch.Tensor:
-#     """Penalize joint position deviation from a target value."""
-#     # extract the used quantities (to enable type-hinting)
-#     asset: Articulation = env.scene[asset_cfg.name]
-#     # wrap the joint positions to (-pi, pi)
-#     joint_pos = wrap_to_pi(asset.data.joint_pos[:, asset_cfg.joint_ids])
-#     # compute the reward
-#     return torch.sum(torch.square(joint_pos - target), dim=1)
 
-def forward_exp_alignment(env, asset_cfg: SceneEntityCfg):
+def track_lin_vel_xy_yaw_frame_l2(
+    env, std: float, command_name: str, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    """Reward tracking of linear velocity commands (xy axes) in the gravity aligned
+    robot frame using an exponential kernel.
     """
-    reward = v_x_body * exp(dot(forward, command))
-    """
-
-    robot = env.scene[asset_cfg.name]
-
-    # forward direction in world frame
-    forwards = math_utils.quat_apply(
-        robot.data.root_link_quat_w,
-        robot.data.FORWARD_VEC_B,
+    # extract the used quantities (to enable type-hinting)
+    asset = env.scene[asset_cfg.name]
+    vel_yaw = quat_apply_inverse(yaw_quat(asset.data.root_quat_w), asset.data.root_lin_vel_w[:, :3])
+    lin_vel_error = torch.sum(
+        torch.square(env.command_manager.get_command(command_name)[:, :2] - vel_yaw[:, :2]), dim=1
     )
+    return -lin_vel_error / std**2
 
-    # command direction (N, 3)
-    commands = env.command_manager.get_term("base_velocity").command
 
-    # alignment: dot(forward, command)
-    alignment = torch.sum(forwards * commands, dim=-1)
+def track_ang_vel_z_world_exp(
+    env, command_name: str, std: float, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")
+) -> torch.Tensor:
+    """Reward tracking of angular velocity commands (yaw) in world frame using exponential kernel."""
+    # extract the used quantities (to enable type-hinting)
+    asset = env.scene[asset_cfg.name]
+    ang_vel_error = torch.square(env.command_manager.get_command(command_name)[:, 2] - asset.data.root_ang_vel_w[:, 2])
+    return torch.exp(-ang_vel_error / std**2)
 
-    # forward velocity (body frame x)
-    forward_vel = robot.data.root_com_lin_vel_b[:, 0]
 
-    # final reward
-    reward = forward_vel * torch.exp(alignment)
+def action_rate_l2_joint(
+    env: "ManagerBasedRLEnv",
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Penalize the rate of change of actions for specific joints using L2 squared kernel.
+    
+    This function allows penalizing action rate for a subset of joints specified
+    by asset_cfg.joint_ids, unlike the default action_rate_l2 which penalizes all actions.
+    
+    Args:
+        env: The environment instance.
+        asset_cfg: Configuration specifying which joints to include via joint_names.
+        
+    Returns:
+        Sum of squared action differences for the specified joints.
+    """
+    # Get the joint indices for the specified joints
+    action = env.action_manager.action
+    prev_action = env.action_manager.prev_action
+    
+    # If joint_ids is specified, only use those indices
+    if asset_cfg.joint_ids is not None:
+        action = action[:, asset_cfg.joint_ids]
+        prev_action = prev_action[:, asset_cfg.joint_ids]
+    
+    return torch.sum(torch.square(action - prev_action), dim=1)
 
-    return reward
+
+

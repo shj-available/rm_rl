@@ -7,7 +7,7 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils import configclass
 
-import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
+import rm_rl.tasks.manager_based.rm_rl.mdp as mdp
 from rm_rl.tasks.manager_based.rm_rl.velocity_env_cfg import LocomotionVelocityRoughEnvCfg, RewardsCfg
 
 ##
@@ -16,45 +16,9 @@ from rm_rl.tasks.manager_based.rm_rl.velocity_env_cfg import LocomotionVelocityR
 from rm_rl.assets.wheel_legged_robots import Infantry_25_CFG
 
 
-@configclass
-class Rewards(RewardsCfg):
-    """Reward terms for the MDP."""
-
-    termination_penalty = RewTerm(func=mdp.is_terminated, weight=-200.0)
-    track_lin_vel_xy_exp = RewTerm(
-        func=mdp.track_lin_vel_xy_yaw_frame_exp,
-        weight=1.0,
-        params={"command_name": "base_velocity", "std": 0.5},
-    )
-    track_ang_vel_z_exp = RewTerm(
-        func=mdp.track_ang_vel_z_world_exp, weight=2, params={"command_name": "base_velocity", "std": 0.5}
-    )
-    #这地方的滑动是基于足式机器人的，不适合轮式机器人，之后要改一下
-    # feet_slide = RewTerm(
-    #     func=mdp.feet_slide,
-    #     weight=-0.1,
-    #     params={
-    #         "sensor_cfg": SceneEntityCfg("contact_forces", body_names=".*_ankle_roll_link"),
-    #         "asset_cfg": SceneEntityCfg("robot", body_names=".*_ankle_roll_link"),
-    #     },
-    # )
-
-    # Penalize ankle joint limits
-    dof_pos_limits = RewTerm(
-        func=mdp.joint_pos_limits,
-        weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["knee.*"])},
-    )
-    # Penalize deviation from default of the joints that are not essential for locomotion
-    # joint_deviation_knee = RewTerm(
-    #     func=mdp.joint_deviation_l1,
-    #     weight=-0.1,
-    #     params={"asset_cfg": SceneEntityCfg("robot", joint_names=["knee.*"])},
-    # )
    
 @configclass
 class RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
-    rewards: Rewards = Rewards()
 
     def __post_init__(self):
         # post init of parent
@@ -81,23 +45,11 @@ class RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         }
         self.events.base_com = None
 
-        # Rewards
-        self.rewards.lin_vel_z_l2.weight = 0.0
-        self.rewards.undesired_contacts = None
-        self.rewards.flat_orientation_l2.weight = -1.0
-        self.rewards.action_rate_l2.weight = -0.005
-        self.rewards.dof_acc_l2.weight = -1.25e-7
-        self.rewards.dof_acc_l2.params["asset_cfg"] = SceneEntityCfg(
-            "robot", joint_names=[".*"]
-        )
-        self.rewards.dof_torques_l2.weight = -1.5e-7
-        self.rewards.dof_torques_l2.params["asset_cfg"] = SceneEntityCfg(
-            "robot", joint_names=[".*"]
-        )
+
 
         # Commands
-        self.commands.base_velocity.ranges.lin_vel_x = (0.0, 2.5)
-        self.commands.base_velocity.ranges.lin_vel_y = (-0.0, 0.0)
+        self.commands.base_velocity.ranges.lin_vel_x = (-2.5, 2.5)
+        self.commands.base_velocity.ranges.lin_vel_y = (-0., 0.)
         self.commands.base_velocity.ranges.ang_vel_z = (-1.0, 1.0)
 
         # terminations

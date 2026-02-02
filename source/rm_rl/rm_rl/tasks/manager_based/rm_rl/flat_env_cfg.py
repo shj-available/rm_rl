@@ -25,18 +25,33 @@ class FlatEnvCfg(RoughEnvCfg):
         self.curriculum.terrain_levels = None
 
         # Rewards
-        self.rewards.track_ang_vel_z_exp.weight = 1.0
-        self.rewards.lin_vel_z_l2.weight = -0.2
-        self.rewards.action_rate_l2.weight = -0.005
-        self.rewards.dof_acc_l2.weight = -1.0e-7
-        # self.rewards.feet_air_time.weight = 0.75
-        # self.rewards.feet_air_time.params["threshold"] = 0.4
-        self.rewards.dof_torques_l2.weight = -2.0e-6
+        self.rewards.track_lin_vel_xy_exp.weight = 5.0
+        self.rewards.track_lin_vel_xy_exp_enhance.weight = 5.0
+        self.rewards.track_ang_vel_z_exp.weight = 5.0
+        self.rewards.base_height_l2.weight = -200.0
+
+        self.rewards.lin_vel_z_l2.weight = -1.0
+        self.rewards.ang_vel_xy_l2.weight = -0.05
+        self.rewards.dof_torques_l2.weight = -5.0e-4
+        self.rewards.leg_acc_l2.weight = -5.0e-6
+        self.rewards.wheel_acc_l2.weight = -1.0e-6
+        # self.rewards.action_rate_l2.weight = -1.0
+        self.rewards.leg_action_rate_l2.weight = -1.0
+        self.rewards.wheel_action_rate_l2.weight = -1.0
+  
+
+        self.rewards.undesired_contacts.weight = -20.0
+        self.rewards.desired_contacts.weight = 2.0
+        self.rewards.flat_orientation_l2.weight = -25.0
+        self.rewards.dof_pos_limits.weight = -1.0
+        self.rewards.joint_devitation.weight = -1.0
+
+        self.rewards.termination_penalty.weight = -2000.0
 
         # Commands
-        self.commands.base_velocity.ranges.lin_vel_x = (-1.0, 2.5)
-        self.commands.base_velocity.ranges.lin_vel_y = (-0., 0.)
-        self.commands.base_velocity.ranges.ang_vel_z = (-1.0, 1.0)
+        self.commands.base_velocity.ranges.lin_vel_x = (-2.5, 2.5)
+        self.commands.base_velocity.ranges.lin_vel_y = (0., 0.)
+        self.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
 
 
 class FlatEnvCfg_PLAY(FlatEnvCfg):
