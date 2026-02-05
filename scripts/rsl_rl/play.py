@@ -174,6 +174,10 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     dt = env.unwrapped.step_dt
 
+    # Camera following setup for single environment
+    if env_cfg.scene.num_envs == 1:
+        camera_offset = torch.tensor([-0.0, 3, 0.5], device=env.unwrapped.device)  # Behind and above robot
+
     # reset environment
     obs = env.get_observations()
     timestep = 0
@@ -188,6 +192,35 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             obs, _, dones, _ = env.step(actions)
             # reset recurrent states for episodes that have terminated
             policy_nn.reset(dones)
+            
+            # Update camera to follow robot when num_envs=1
+            if env_cfg.scene.num_envs == 1:
+                robot = env.unwrapped.scene["robot"]
+                robot_pos = robot.data.root_pos_w[0].cpu().numpy()
+                robot_quat = robot.data.root_quat_w[0]
+                # Compute camera position behind the robot
+                from isaaclab.utils.math import quat_apply
+                cam_offset_world = quat_apply(robot_quat.unsqueeze(0), camera_offset.unsqueeze(0))[0]
+                cam_pos = robot.data.root_pos_w[0] + cam_offset_world
+                cam_pos = cam_pos.cpu().numpy()
+                target_pos = robot_pos
+                env.unwrapped.sim.set_camera_view(eye=cam_pos.tolist(), target=target_pos.tolist())
+            
+            # Debug print - configure which variables to observe
+            from rm_rl.tasks.manager_based.rm_rl.mdp.utils import debug_print
+            debug_print(
+                env.unwrapped,
+                env_id=0,
+                print_interval=10,
+                config={
+                    "velocity_tracking": True,  # Command vs actual velocity + orientation
+                    "virtual_leg": True, # Virtual leg positions and angles
+                    "wheel_state": True, 
+                    "joint_torque": True,
+                    "link_wrench": True,
+                }
+            )
+            
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video
