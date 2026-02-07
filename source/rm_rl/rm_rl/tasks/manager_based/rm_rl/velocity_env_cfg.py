@@ -126,15 +126,15 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.1, n_max=0.1))
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.2, n_max=0.2))
+        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.01, n_max=0.01))
         projected_gravity = ObsTerm(
             func=mdp.projected_gravity,
-            noise=Unoise(n_min=-0.05, n_max=0.05),
+            noise=Unoise(n_min=-0.01, n_max=0.01),
         )
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
         joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.1, n_max=0.1))
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.10))
         actions = ObsTerm(func=mdp.last_action)
         base_height = ObsTerm(func=mdp.base_pos_z, noise=Unoise(n_min=-0.01, n_max=0.01))
         height_scan = ObsTerm(
@@ -247,7 +247,7 @@ class RewardsCfg:
     track_lin_vel_x_exp = RewTerm(
         func=mdp.track_lin_vel_x_yaw_frame_exp,
         weight=25.0,
-        params={"command_name": "base_velocity", "std": 0.5},
+        params={"command_name": "base_velocity", "std": 1.0},
     )
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_world_exp, weight=2, params={"command_name": "base_velocity", "std": 1.0}
@@ -258,7 +258,7 @@ class RewardsCfg:
 
     # -- flat orientation
     flat_orientation_roll_exp = RewTerm(func=mdp.flat_orientation_roll_exp, weight=0.0, params={"std": 0.2})
-    flat_orientation_pitch_exp = RewTerm(func=mdp.flat_orientation_pitch_exp, weight=0.0, params={"std": 0.1})
+    flat_orientation_pitch_exp = RewTerm(func=mdp.flat_orientation_pitch_exp, weight=0.0, params={"std": 0.05})
 
     # -- posture smoothness
     lin_vel_z_l2 = RewTerm(func=mdp.lin_vel_z_l2, weight=-2.0)
@@ -277,6 +277,10 @@ class RewardsCfg:
         func=mdp.virtual_leg_angle_diff_l2,
         weight=-15.0,
     )
+    virtual_leg_length_diff_l2 = RewTerm(
+        func=mdp.virtual_leg_length_diff_l2,
+        weight=-5.0,
+    )
     virtual_leg_angle_deviation_l2 = RewTerm(
         func=mdp.virtual_leg_angle_deviation_l2,
         weight=-0.0,
@@ -292,7 +296,7 @@ class RewardsCfg:
     desired_contacts = RewTerm(
         func=mdp.desired_contacts,
         weight=0.1,
-        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="wheel.*"), "threshold": 80.0},
+        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="wheel.*"), "threshold": 60.0},
     )
 
     # -- constant bonus

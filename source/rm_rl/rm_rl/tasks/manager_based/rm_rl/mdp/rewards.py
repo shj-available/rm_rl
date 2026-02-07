@@ -20,7 +20,7 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.sensors import ContactSensor
 from isaaclab.utils.math import quat_apply_inverse, yaw_quat
 
-from .utils import virtual_leg_angle
+from .utils import virtual_leg_angle , virtual_leg_length
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv
@@ -177,6 +177,20 @@ def virtual_leg_angle_diff_l2(env: "ManagerBasedRLEnv") -> torch.Tensor:
     angles = virtual_leg_angle(env)
     angle_diff = angles[:, 0] - angles[:, 1]
     return torch.square(angle_diff)
+
+def virtual_leg_length_diff_l2(env: "ManagerBasedRLEnv") -> torch.Tensor:
+    """Penalize the difference in lengths between the left and right virtual legs.
+    
+    Uses the virtual leg model to compute leg lengths from hip and knee joint positions.
+    Returns the squared difference between left and right leg lengths.
+    
+    Returns:
+        Tensor [num_envs]: Squared length difference for each environment.
+    """
+    # Get virtual leg lengths: [num_envs, 2] = [left_length, right_length]
+    lengths = virtual_leg_length(env)
+    length_diff = lengths[:, 0] - lengths[:, 1]
+    return torch.square(length_diff)
 
 
 def virtual_leg_angle_deviation_l2(env: "ManagerBasedRLEnv", target_angle: float = 0.0) -> torch.Tensor:
