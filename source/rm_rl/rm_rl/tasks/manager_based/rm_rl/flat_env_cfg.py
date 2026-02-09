@@ -25,17 +25,23 @@ class FlatEnvCfg(RoughEnvCfg):
         self.curriculum.terrain_levels = None
 
         # Rewards
-        self.rewards.track_lin_vel_x_exp.weight = 15.0
-        self.rewards.track_ang_vel_z_exp.weight = 5.0
-        self.rewards.base_height_exp.weight = 5.0
-        self.rewards.flat_orientation_roll_exp.weight = 5.0
+        self.rewards.track_lin_vel_x_exp.weight = 25.0
+        self.rewards.track_lin_vel_x_exp.params["std"] = 0.5
+        self.rewards.track_ang_vel_z_exp.weight = 15.0
+        self.rewards.track_ang_vel_z_exp.params["std"] = 1.0
+        self.rewards.base_height_exp.weight = 15.0
+        self.rewards.base_height_exp.params["target_height"] = 0.23
+        self.rewards.base_height_exp.params["std"] = 0.1
+        self.rewards.flat_orientation_roll_exp.weight = 10.0
+        self.rewards.flat_orientation_roll_exp.params["std"] = 0.1
         self.rewards.flat_orientation_pitch_exp.weight = 10.0
+        self.rewards.flat_orientation_pitch_exp.params["std"] = 0.1
 
         self.rewards.lin_vel_z_l2.weight = -10.0
-        self.rewards.ang_vel_x_l2.weight = -0.05  # roll
+        self.rewards.ang_vel_x_l2.weight = -0.5  # roll
         self.rewards.ang_vel_y_l2.weight = -1.0  # pitch
 
-        self.rewards.dof_torques_l2.weight = -2.0e-3
+        self.rewards.dof_torques_l2.weight = -5.0e-4
         self.rewards.leg_acc_l2.weight = -8.0e-6
         self.rewards.wheel_acc_l2.weight = -1.0e-7
         self.rewards.leg_action_rate_l2.weight = -2.0
@@ -45,7 +51,7 @@ class FlatEnvCfg(RoughEnvCfg):
         self.rewards.virtual_leg_length_diff_l2.weight = -10.0
         self.rewards.virtual_leg_angle_deviation_l2.weight = -5.0
 
-        self.rewards.undesired_contacts.weight = -30.0
+        self.rewards.undesired_contacts.weight = -15.0
         self.rewards.desired_contacts.weight = 0
 
         self.rewards.termination_penalty.weight = -1000.0
@@ -82,7 +88,7 @@ class FlatEnvCfg(RoughEnvCfg):
         self.commands.base_velocity.ranges.ang_vel_z = (-3.0, 3.0)
         # self.commands.base_velocity.ranges.lin_vel_x = (0, 0)
         # self.commands.base_velocity.ranges.lin_vel_y = (0., 0.)
-        # self.commands.base_velocity.ranges.ang_vel_z = (0, 0)
+        # self.commands.base_velocity.ranges.ang_vel_z = (-6.28, 6.28)
 class FlatEnvCfg_PLAY(FlatEnvCfg):
     def __post_init__(self) -> None:
         # post init of parent

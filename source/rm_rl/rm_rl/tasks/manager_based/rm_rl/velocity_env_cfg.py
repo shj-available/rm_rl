@@ -93,7 +93,7 @@ class CommandsCfg:
 
     base_velocity = mdp.UniformVelocityCommandCfg(
         asset_name="robot",
-        resampling_time_range=(10.0, 10.0),
+        resampling_time_range=(3.0, 5.0),
         rel_standing_envs=0.02,
         rel_heading_envs=1.0,
         heading_command=True,
@@ -287,18 +287,18 @@ class RewardsCfg:
     track_lin_vel_x_exp = RewTerm(
         func=mdp.track_lin_vel_x_yaw_frame_exp,
         weight=25.0,
-        params={"command_name": "base_velocity", "std": 1.0},
+        params={"command_name": "base_velocity", "std": 1},
     )
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_world_exp, weight=2, params={"command_name": "base_velocity", "std": 1.0}
     )
     base_height_exp = RewTerm(
-        func=mdp.base_height_exp, weight=-1.0, params={"target_height": 0.26, "std": 0.15}
+        func=mdp.base_height_exp, weight=-1.0, params={"target_height": 0.23, "std": 0.15}
     )
 
     # -- flat orientation
     flat_orientation_roll_exp = RewTerm(func=mdp.flat_orientation_roll_exp, weight=0.0, params={"std": 0.2})
-    flat_orientation_pitch_exp = RewTerm(func=mdp.flat_orientation_pitch_exp, weight=0.0, params={"std": 0.05})
+    flat_orientation_pitch_exp = RewTerm(func=mdp.flat_orientation_pitch_exp, weight=0.0, params={"std": 0.2})
 
     # -- posture smoothness
     lin_vel_z_l2 = RewTerm(func=mdp.lin_vel_z_l2, weight=-2.0)
@@ -363,7 +363,7 @@ class TerminationsCfg:
     # )
     turn_over = DoneTerm(
         func=mdp.bad_orientation, 
-        params={"limit_angle": math.radians(60),  # 60转为弧度
+        params={"limit_angle": math.radians(45),  # 60转为弧度
                 "asset_cfg": SceneEntityCfg(name="robot")})
 
 
