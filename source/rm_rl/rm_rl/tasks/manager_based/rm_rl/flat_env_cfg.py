@@ -18,9 +18,9 @@ class FlatEnvCfg(RoughEnvCfg):
         # change terrain to flat
         self.scene.terrain.terrain_type = "plane"
         self.scene.terrain.terrain_generator = None
-        # no height scan
-        self.scene.height_scanner = None
-        self.observations.policy.height_scan = None
+        # # no height scan
+        # self.scene.height_scanner = None
+        # self.observations.policy.height_scan = None
         # no terrain curriculum
         self.curriculum.terrain_levels = None
 

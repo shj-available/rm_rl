@@ -126,32 +126,72 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         # observation terms (order preserved)
-        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        # imu data
         base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        projected_gravity = ObsTerm(
-            func=mdp.projected_gravity,
+        imu_measured_gravity = ObsTerm(
+            func=mdp.imu_measured_gravity,
             noise=Unoise(n_min=-0.01, n_max=0.01),
         )
-        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.10))
-        actions = ObsTerm(func=mdp.last_action)
-        base_height = ObsTerm(func=mdp.base_pos_z, noise=Unoise(n_min=-0.01, n_max=0.01))
-        height_scan = ObsTerm(
-            func=mdp.height_scan,
-            params={"sensor_cfg": SceneEntityCfg("height_scanner")},
-            noise=Unoise(n_min=-0.1, n_max=0.1),
-            clip=(-1.0, 1.0),
+        # virtual leg states
+        virtual_leg_angle = ObsTerm(func=mdp.virtual_leg_angle, noise=Unoise(n_min=-0.01, n_max=0.01))
+        virtual_leg_length = ObsTerm(func=mdp.virtual_leg_length, noise=Unoise(n_min=-0.01, n_max=0.01))
+        virtual_leg_angle_vel = ObsTerm(func=mdp.virtual_leg_angle_velocity, noise=Unoise(n_min=-0.01, n_max=0.01))
+        virtual_leg_length_vel = ObsTerm(func=mdp.virtual_leg_length_velocity, noise=Unoise(n_min=-0.01, n_max=0.01))
+        # wheel velocity
+        wheel_vel = ObsTerm(
+            func=mdp.joint_vel_rel,
+            params={"asset_cfg": SceneEntityCfg("robot", joint_names=["wheel.*"])},
+            noise=Unoise(n_min=-0.01, n_max=0.10),
         )
-        # Debug: uncomment below line in play.py instead of adding here
-        # virtual_leg_debug = ObsTerm(func=mdp.debug_virtual_leg_kinematics, params={"print_interval": 200})
+        # commands
+        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
+        # actions
+        actions = ObsTerm(func=mdp.last_action)
+
+
+
 
         def __post_init__(self):
             self.enable_corruption = True
             self.concatenate_terms = True
 
+    @configclass
+    class CriticCfg(ObsGroup):
+        """Observations for critic group."""
+
+        #actor observations
+        # imu data
+        base_ang_vel = ObsTerm(func=mdp.base_ang_vel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        projected_gravity = ObsTerm(
+            func=mdp.projected_gravity,
+            noise=Unoise(n_min=-0.01, n_max=0.01)
+        )
+        # virtual leg states
+        virtual_leg_angle = ObsTerm(func=mdp.virtual_leg_angle, noise=Unoise(n_min=-0.01, n_max=0.01))
+        virtual_leg_length = ObsTerm(func=mdp.virtual_leg_length, noise=Unoise(n_min=-0.01, n_max=0.01))
+        virtual_leg_angle_vel = ObsTerm(func=mdp.virtual_leg_angle_velocity, noise=Unoise(n_min=-0.01, n_max=0.01))
+        virtual_leg_length_vel = ObsTerm(func=mdp.virtual_leg_length_velocity, noise=Unoise(n_min=-0.01, n_max=0.01))
+        # wheel velocity
+        wheel_vel = ObsTerm(
+            func=mdp.joint_vel_rel,
+            params={"asset_cfg": SceneEntityCfg("robot", joint_names=["wheel.*"])},
+            noise=Unoise(n_min=-0.01, n_max=0.10),
+        )
+        # commands
+        velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
+        # actions
+        actions = ObsTerm(func=mdp.last_action)
+
+        # additional critic observations
+        base_lin_vel = ObsTerm(func=mdp.base_lin_vel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        base_height = ObsTerm(func=mdp.base_pos_z, noise=Unoise(n_min=-0.01, n_max=0.01))
+
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = True
     # observation groups
     policy: PolicyCfg = PolicyCfg()
+    critic: CriticCfg = CriticCfg()
 
 
 @configclass

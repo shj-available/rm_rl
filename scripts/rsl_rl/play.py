@@ -215,9 +215,9 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
                 config={
                     "velocity_tracking": True,  # Command vs actual velocity + orientation
                     "virtual_leg": True, # Virtual leg positions and angles
-                    "wheel_state": True, 
                     "joint_torque": True,
                     "link_wrench": True,
+                    "gravity": True,  # Projected gravity vs IMU measured gravity
                 }
             )
             

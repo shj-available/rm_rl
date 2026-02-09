@@ -20,7 +20,7 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.sensors import ContactSensor
 from isaaclab.utils.math import quat_apply_inverse, yaw_quat
 
-from .utils import virtual_leg_angle , virtual_leg_length
+from .observations import virtual_leg_angle, virtual_leg_length
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedRLEnv

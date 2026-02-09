@@ -25,7 +25,7 @@ class RoughEnvCfg(LocomotionVelocityRoughEnvCfg):
         super().__post_init__()
         # Scene
         self.scene.robot = Infantry_25_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        self.scene.height_scanner.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
+        # self.scene.height_scanner.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
 
         # Randomization
         self.events.push_robot = None
