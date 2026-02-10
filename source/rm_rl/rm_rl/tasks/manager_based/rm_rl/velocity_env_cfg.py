@@ -141,7 +141,7 @@ class ObservationsCfg:
         wheel_vel = ObsTerm(
             func=mdp.joint_vel_rel,
             params={"asset_cfg": SceneEntityCfg("robot", joint_names=["wheel.*"])},
-            noise=Unoise(n_min=-0.01, n_max=0.10),
+            noise=Unoise(n_min=-0.01, n_max=0.01),
         )
         # commands
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})
@@ -175,7 +175,7 @@ class ObservationsCfg:
         wheel_vel = ObsTerm(
             func=mdp.joint_vel_rel,
             params={"asset_cfg": SceneEntityCfg("robot", joint_names=["wheel.*"])},
-            noise=Unoise(n_min=-0.01, n_max=0.10),
+            noise=Unoise(n_min=-0.01, n_max=0.01),
         )
         # commands
         velocity_commands = ObsTerm(func=mdp.generated_commands, params={"command_name": "base_velocity"})

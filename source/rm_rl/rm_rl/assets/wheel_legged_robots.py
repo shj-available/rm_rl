@@ -6,7 +6,7 @@ from rm_rl.assets import ISAACLAB_ASSETS_DATA_DIR
 
 Infantry_25_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"{ISAACLAB_ASSETS_DATA_DIR}/Infantry_25/usd/Infantry_25_headless.usd",
+        usd_path=f"{ISAACLAB_ASSETS_DATA_DIR}/Infantry_25/usd/Infantry_25_headless_copy.usd",
         activate_contact_sensors=True,
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=False,
@@ -14,7 +14,7 @@ Infantry_25_CFG = ArticulationCfg(
             linear_damping=0.0,
             angular_damping=0.0,
             max_linear_velocity=1000.0,
-            max_angular_velocity=1000.0,
+            max_angular_velocity=60000.0,
             max_depenetration_velocity=1.0,
         ),
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
@@ -51,7 +51,7 @@ Infantry_25_CFG = ArticulationCfg(
             stiffness=0.0, 
             damping=0.2,
             friction=0.0,
-            armature=0.002,
+            armature=0.001,
             min_delay=0,
             max_delay=5,
         ),
