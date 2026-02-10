@@ -161,12 +161,21 @@ def _debug_velocity_tracking(env: "ManagerBasedRLEnv", env_id: int) -> str:
     vy_actual = vel_yaw[1].item()
     wz_actual = root_ang_vel_w[2].item()
     
-    # Get commanded velocities
+    # Get commanded velocities from observation (works for both normal and keyboard mode)
     try:
-        cmd = env.command_manager.get_command("base_velocity")[env_id]
-        vx_cmd = cmd[0].item()
-        vy_cmd = cmd[1].item()
-        wz_cmd = cmd[2].item()
+        # Find velocity_commands term in policy observation group
+        obs_mgr = env.observation_manager
+        term_names = obs_mgr._group_obs_term_names.get("policy", [])
+        term_cfgs = obs_mgr._group_obs_term_cfgs.get("policy", [])
+        
+        vx_cmd, vy_cmd, wz_cmd = 0.0, 0.0, 0.0
+        for name, cfg in zip(term_names, term_cfgs):
+            if name == "velocity_commands":
+                cmd = cfg.func(env, **cfg.params)[env_id]
+                vx_cmd = cmd[0].item()
+                vy_cmd = cmd[1].item()
+                wz_cmd = cmd[2].item()
+                break
     except Exception:
         vx_cmd, vy_cmd, wz_cmd = 0.0, 0.0, 0.0
     
@@ -334,6 +343,80 @@ def _debug_link_wrench(env: "ManagerBasedRLEnv", env_id: int) -> str:
     return "\n".join(lines)
 
 
+def _debug_policy_io(
+    env: "ManagerBasedRLEnv",
+    env_id: int,
+    obs: torch.Tensor | dict | None,
+    actions: torch.Tensor | None,
+) -> str:
+    """Get policy input/output debug info.
+    
+    Shows:
+    - obs: Observation tensor fed into the policy network
+    - actions: Action tensor output from the policy network
+    
+    Args:
+        env: Environment instance
+        env_id: Which environment to debug
+        obs: Observation tensor, dict, or TensorDict from env.get_observations()
+             If dict/TensorDict, expects "policy" key containing the tensor [num_envs, obs_dim]
+        actions: Action tensor from policy(obs) [num_envs, action_dim]
+    """
+    lines = ["--- Policy I/O ---"]
+    
+    if obs is not None:
+        # Handle TensorDict or dict observations (common in Isaac Lab)
+        # TensorDict behaves like a dict, so we can use the same handling
+        obs_tensor = None
+        if hasattr(obs, "get") or isinstance(obs, dict):
+            # It's a dict-like object (dict or TensorDict)
+            obs_tensor = obs.get("policy", None)
+            if obs_tensor is None:
+                keys = list(obs.keys()) if hasattr(obs, "keys") else "unknown"
+                lines.append(f"  Observation: dict-like with keys {keys}, 'policy' key not found")
+        elif isinstance(obs, torch.Tensor):
+            obs_tensor = obs
+        
+        if obs_tensor is not None and isinstance(obs_tensor, torch.Tensor) and obs_tensor.dim() >= 1:
+            obs_single = obs_tensor[env_id]  # [obs_dim]
+            obs_dim = obs_single.shape[0] if obs_single.dim() > 0 else 1
+            lines.append(f"  Observation (dim={obs_dim}):")
+            
+            # Print observation values in a compact format (8 values per line)
+            values_per_line = 8
+            if obs_single.dim() > 0:
+                for i in range(0, obs_dim, values_per_line):
+                    end_idx = min(i + values_per_line, obs_dim)
+                    vals = [f"{obs_single[j].item():+.4f}" for j in range(i, end_idx)]
+                    indices = f"[{i:2d}-{end_idx-1:2d}]"
+                    lines.append(f"    {indices}: {', '.join(vals)}")
+            else:
+                lines.append(f"    [{obs_single.item():+.4f}]")
+        elif obs_tensor is not None:
+            lines.append(f"  Observation: type={type(obs_tensor)}, shape={getattr(obs_tensor, 'shape', 'N/A')}")
+    else:
+        lines.append("  Observation: Not provided")
+    
+    if actions is not None:
+        if isinstance(actions, torch.Tensor) and actions.dim() >= 1:
+            actions_single = actions[env_id]  # [action_dim]
+            action_dim = actions_single.shape[0] if actions_single.dim() > 0 else 1
+            lines.append(f"  Actions (dim={action_dim}):")
+            
+            # Print action values
+            if actions_single.dim() > 0:
+                vals = [f"{actions_single[j].item():+.4f}" for j in range(action_dim)]
+                lines.append(f"    [{', '.join(vals)}]")
+            else:
+                lines.append(f"    [{actions_single.item():+.4f}]")
+        else:
+            lines.append(f"  Actions: type={type(actions)}, shape={getattr(actions, 'shape', 'N/A')}")
+    else:
+        lines.append("  Actions: Not provided")
+    
+    return "\n".join(lines)
+
+
 
 
 def debug_print(
@@ -341,6 +424,8 @@ def debug_print(
     env_id: int = 0,
     print_interval: int = 100,
     config: dict | None = None,
+    obs: torch.Tensor | None = None,
+    actions: torch.Tensor | None = None,
 ) -> None:
     """
     Main debug print function. Call this in play.py to observe variables.
@@ -354,10 +439,13 @@ def debug_print(
             - "base_state": bool
             - "joint_state": bool
             - "command": bool
+            - "policy_io": bool  # Display policy observation input and action output
+        obs: Observation tensor for policy_io debug [num_envs, obs_dim]
+        actions: Action tensor for policy_io debug [num_envs, action_dim]
     
     Usage in play.py:
         from rm_rl.tasks.manager_based.rm_rl.mdp.utils import debug_print
-        debug_print(env.unwrapped, env_id=0, print_interval=100)
+        debug_print(env.unwrapped, env_id=0, print_interval=100, obs=obs, actions=actions)
     """
     if env.common_step_counter % print_interval != 0:
         return
@@ -383,6 +471,9 @@ def debug_print(
     if cfg.get("link_wrench", False):
         print(_debug_link_wrench(env, env_id))
     
+    if cfg.get("policy_io", False):
+        print(_debug_policy_io(env, env_id, obs, actions))
+
     print('='*50)
 
 

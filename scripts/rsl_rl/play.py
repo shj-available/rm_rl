@@ -69,6 +69,7 @@ from isaaclab.envs import (
     ManagerBasedRLEnvCfg,
     multi_agent_to_single_agent,
 )
+from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.utils.assets import retrieve_file_path
 from isaaclab.utils.dict import print_dict
 
@@ -229,12 +230,15 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
                 env_id=0,
                 print_interval=10,
                 config={
+                    "policy_io": True,  # Policy input observation and output action
                     "velocity_tracking": True,  # Command vs actual velocity + orientation
                     "virtual_leg": True, # Virtual leg positions and angles
                     "joint_torque": True,
                     "link_wrench": True,
                     "gravity": True,  # Projected gravity vs IMU measured gravity
-                }
+                },
+                obs=obs,
+                actions=actions,
             )
             
         if args_cli.video:
