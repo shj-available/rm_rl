@@ -60,6 +60,7 @@ import gymnasium as gym
 import torch
 from rsl_rl.runners import DistillationRunner, OnPolicyRunner
 
+from isaaclab.devices import Se2Keyboard, Se2KeyboardCfg
 from isaaclab.envs import (
     DirectMARLEnv,
     DirectMARLEnvCfg,
@@ -114,6 +115,20 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # set the log directory for the environment (works for all environment types)
     env_cfg.log_dir = log_dir
+
+    if args_cli.keyboard:
+        env_cfg.scene.num_envs = 1
+        env_cfg.terminations.time_out = None
+        env_cfg.commands.base_velocity.debug_vis = False
+        config = Se2KeyboardCfg(
+            v_x_sensitivity=env_cfg.commands.base_velocity.ranges.lin_vel_x[1],
+            v_y_sensitivity=env_cfg.commands.base_velocity.ranges.lin_vel_y[1],
+            omega_z_sensitivity=env_cfg.commands.base_velocity.ranges.ang_vel_z[1],
+        )
+        controller = Se2Keyboard(config)
+        env_cfg.observations.policy.velocity_commands = ObsTerm(
+            func=lambda env: torch.tensor(controller.advance(), dtype=torch.float32).unsqueeze(0).to(env.device),
+        )
 
     # create isaac environment
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
