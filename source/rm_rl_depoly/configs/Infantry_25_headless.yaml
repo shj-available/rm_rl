@@ -1,5 +1,5 @@
 policy_path: "../rm_rl/logs/rsl_rl/cartpole_direct/2026-02-09_16-01-01/model_8991.pt"
-xml_path: "model/Infantry_25_headless.xml"
+xml_path: "../model/Infantry_25_headless.xml"
 
 # Total simulation time
 simulation_duration: 80
@@ -23,26 +23,10 @@ action_scale_wheel: 60.0
 num_actions: 6
 clip_actions: 100
 
-# Command scales
-
-# Observation scales
-lin_vel_scale: 2.0
-ang_vel_scale: 0.25
-height_scale: 5.0
-dof_pos_scale: 1.0
-dof_vel_scale: 0.04
-dof_acc_scale: 0.0025
-l1_scale: 5.0
-l1_dot_scale: 0.25
-
-clip_observations: 100.0
-# num_obs: 25
 num_obs: 25
 
 
 # Leg param
 l1: 0.21
-l2: 0.25
+l2: 0.248
 
-# Command
-command_init: [2.5, 0.0, 0.0]
